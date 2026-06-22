@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+env/
+.env
+
+# Dataset images (download from Kaggle separately)
+data/chest_xray/train/NORMAL/*
+data/chest_xray/train/PNEUMONIA/*
+data/chest_xray/val/NORMAL/*
+data/chest_xray/val/PNEUMONIA/*
+data/chest_xray/test/NORMAL/*
+data/chest_xray/test/PNEUMONIA/*
+!.gitkeep
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Claude Code
+.claude/
+
+# Logs (generated at runtime)
+logs/
+
+# Grad-CAM per-image results (generated at runtime)
+results/gradcam/
+
+# Fix/patch scripts (already applied)
+fix_config.py
+fix_config2.py
+fix_gradcam.py
+fix_gradcam2.py
+fix_gradcam_final.py
