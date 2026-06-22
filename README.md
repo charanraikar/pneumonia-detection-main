@@ -232,7 +232,7 @@ AI & Machine Learning Engineer
 
 📧 raikarcharan64@gmail.com
 
-🔗 LinkedIn: https://www.linkedin.com/in/charan-raikar
+🔗 LinkedIn: https://www.linkedin.com/in/charanraikar?utm_source=share_via&utm_content=profile&utm_medium=member_android
 
 ---
 
