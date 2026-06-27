@@ -1,239 +1,236 @@
-# 🏥 AI-Powered Pneumonia Detection System
+AI-powered pneumonia detection from chest X-rays using ConvNeXt-Base + DDPM synthesis + Grad-CAM explainability. 95.19% accuracy | AUC 0.987 | FastAPI web app.
 
-An advanced Deep Learning-based Pneumonia Detection System that analyzes Chest X-ray images and provides accurate predictions along with Explainable AI visualizations and clinical risk assessment.
+# 🫁 PneumoScan — AI-Powered Pneumonia Detection
 
----
-
-## 🚀 Features
-
-### 🩻 Automated Chest X-ray Analysis
-- Detects Pneumonia from Chest X-ray images.
-- Binary Classification:
-  - NORMAL
-  - PNEUMONIA
-
-### 🤖 Deep Learning Architecture
-- ConvNeXt-Based Neural Network
-- Transfer Learning with Pretrained Weights
-- Optimized for Medical Imaging Tasks
-
-### 🔥 Explainable AI (XAI)
-- Grad-CAM Visualization
-- Heatmap Generation
-- Model Decision Interpretation
-- Region-of-Interest Localization
-
-### 📊 Clinical Risk Assessment
-- Risk Score Calculation
-- Risk Level Classification
-  - LOW
-  - MODERATE
-  - HIGH
-  - CRITICAL
-- Clinical Recommendation Generation
-
-### 🌊 Synthetic Data Generation
-- DDPM (Denoising Diffusion Probabilistic Model)
-- Synthetic Chest X-ray Generation
-- Data Augmentation Support
-
-### ⚡ High Performance
-- CUDA GPU Acceleration
-- Mixed Precision Training
-- Optimized Memory Usage
-- Fast Inference Pipeline
-
-### 🌐 Web Application
-- FastAPI Backend
-- REST API Endpoints
-- Interactive Dashboard
-- Real-Time Predictions
+An end-to-end medical imaging pipeline that detects pneumonia from chest X-rays
+using ConvNeXt-Base, explains predictions with Grad-CAM heatmaps, synthesises
+new X-rays using a DDPM, and serves everything through a FastAPI web application.
 
 ---
 
-# 🛠️ Tech Stack
+## 🏆 Results
 
-## Artificial Intelligence & Deep Learning
-- PyTorch
-- ConvNeXt
-- Grad-CAM
-- DDPM
-
-## Backend
-- FastAPI
-- Python
-
-## Data Processing
-- NumPy
-- Pandas
-- OpenCV
-- Albumentations
-
-## Visualization
-- Matplotlib
-- Grad-CAM Heatmaps
-
-## Deployment
-- FastAPI
-- CUDA
-- NVIDIA GPU Support
+| Metric         | Score   |
+|----------------|---------|
+| Test Accuracy  | 95.19%  |
+| AUC-ROC        | 0.987   |
+| Pneumonia F1   | 0.9625  |
+| Normal F1      | 0.9330  |
+| Test Samples   | 624     |
 
 ---
 
-# 📂 Project Structure
+## 🧠 Architecture Overview
 
-```bash
-pneumonia-detection/
+Chest X-ray Input
+
 │
-├── app.py
-├── config.py
-├── dataset.py
-├── model.py
-├── gradcam.py
-├── ddpm.py
+
+▼
+
+Medical Preprocessing (Bilateral Filter + CLAHE)
+
 │
-├── checkpoints/
-├── data/
-├── logs/
-├── results/
+
+▼
+
+ConvNeXt-Base (ImageNet-22k pretrained)
+
+└── Global Average Pooling [1024]
+
+└── LayerNorm → Dropout(0.4)
+
+└── Linear(1024→512) → GELU
+
+└── Dropout(0.3) → Linear(512→2)
+
 │
-└── requirements.txt
-```
+
+▼
+
+┌─────────────┬──────────────┬─────────────────┐
+
+│  Prediction │   Grad-CAM   │   Risk Scorer   │
+
+│ NORMAL /    │  Heatmap     │ LOW / MODERATE  │
+
+│ PNEUMONIA   │  Overlay     │ HIGH / CRITICAL │
+
+└─────────────┴──────────────┴─────────────────┘
 
 ---
 
-# 🧠 Model Pipeline
+## 🗂️ Project Structure
 
-```text
-Chest X-ray
-      │
-      ▼
-Image Enhancement
-      │
-      ▼
-ConvNeXt Model
-      │
-      ├────────► Pneumonia Probability
-      │
-      └────────► Grad-CAM Heatmap
-                    │
-                    ▼
-            Risk Assessment Engine
-                    │
-                    ▼
-            Clinical Recommendation
-```
+pneumonia_project/
+
+│
+
+├── main.py              # Entry point — CLI with --mode all/train/gradcam/ddpm/infer
+
+├── config.py            # All hyperparameters and paths
+
+├── model.py             # ConvNeXt-Base + custom head + LabelSmoothing loss
+
+├── train.py             # Training loop with AMP, early stopping, LR scheduler
+
+├── dataset.py           # PneumoniaDataset, augmentations, weighted sampler
+
+├── gradcam.py           # Grad-CAM engine + RiskScorer + visualisation
+
+├── ddpm.py              # DDPM UNet + cosine noise schedule + X-ray synthesis
+
+├── app.py               # FastAPI backend — /predict, /health endpoints
+
+│
+
+├── templates/
+
+│   └── index.html       # Web UI frontend
+
+│
+
+├── checkpoints/         # best_model.pth saved here
+
+├── results/             # Grad-CAM output images
+
+├── ddpm_outputs/        # Generated X-rays + diffusion process
+
+├── logs/                # TensorBoard logs
+
+│
+
+├── requirements.txt     # ML dependencies
+
+├── requirements_web.txt # FastAPI dependencies
+
+├── setup_env.py         # Environment checker
+
+├── run_all.bat          # One-click full pipeline (Windows)
+
+└── start_webapp.bat     # Launch web app (Windows)
 
 ---
 
-# 📊 Outputs
+## ⚙️ Pipeline Stages
 
-The system generates:
+### Stage 1 — DDPM X-ray Synthesis
+- UNet trained from scratch on grayscale chest X-rays (64×64)
+- Cosine noise schedule over 1000 timesteps
+- Generates synthetic X-rays to augment the minority class
+- Visualises the full forward noising process (t=0 → t=999)
 
-✅ Prediction Label
+### Stage 2 — ConvNeXt-Base Classification
+- Backbone: `convnext_base` via `timm` (ImageNet-22k pretrained)
+- Custom head with LayerNorm, GELU, dual Dropout
+- Label smoothing (ε=0.1) + class-weighted loss
+- Differential LR: backbone 5e-5, head 2e-4
+- Mixed precision (AMP) + gradient clipping
+- Stratified 85/15 train/val split (fixes Kaggle's 16-image val set)
+- WeightedRandomSampler to handle class imbalance
 
-✅ Confidence Score
+### Stage 3 — Grad-CAM + Risk Scoring
+- Hooks into `backbone.stages[-1]` for activation maps
+- Risk Score = 0.7 × P(Pneumonia) + 0.3 × CAM intensity (top 20% pixels)
+- Four risk levels: LOW / MODERATE / HIGH / CRITICAL
+- 4-panel output: Original | Overlay | Heatmap | Risk Dashboard
 
-✅ Grad-CAM Heatmap
-
-✅ Risk Score
-
-✅ Clinical Recommendation
-
-✅ Risk Dashboard
+### Stage 4 — FastAPI Web App
+- Upload any chest X-ray → instant prediction
+- Returns: prediction, confidence, risk score, Grad-CAM overlay, risk dashboard
+- All images returned as base64 PNG for the frontend
 
 ---
 
-# 🎯 Risk Assessment Levels
+## 🚀 Quick Start
 
-| Risk Score | Level |
-|------------|--------|
-| 0-25% | LOW |
-| 25-50% | MODERATE |
-| 50-75% | HIGH |
-| 75-100% | CRITICAL |
-
----
-
-# 🚀 Installation
-
-## Clone Repository
-
+### 1. Clone & Setup
 ```bash
-git clone https://github.com/charanraikar/pneumonia-detection-main.git
-cd pneumonia-detection-main
-```
-
-## Create Virtual Environment
-
-```bash
+git clone https://github.com/charanraikar/pneumoscan.git
+cd pneumoscan
 python -m venv venv
-```
-
-### Windows
-
-```bash
-venv\Scripts\activate
-```
-
-### Linux / Mac
-
-```bash
-source venv/bin/activate
-```
-
-## Install Dependencies
-
-```bash
+venv\Scripts\activate        # Windows
 pip install -r requirements.txt
+python setup_env.py          # Verify everything is ready
 ```
 
----
-
-# ▶️ Run Application
-
+### 2. Download Dataset
 ```bash
-python app.py
+kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
+mkdir data && unzip chest-xray-pneumonia.zip -d data/
 ```
 
-or
-
+### 3. Run Full Pipeline
 ```bash
-uvicorn app:app --reload
+python main.py --mode all
+# or step by step:
+python main.py --mode ddpm
+python main.py --mode train
+python main.py --mode gradcam
+```
+
+### 4. Single Image Inference
+```bash
+python main.py --mode infer --image path/to/xray.jpeg
+```
+
+### 5. Launch Web App
+```bash
+pip install -r requirements_web.txt
+uvicorn app:app --host 0.0.0.0 --port 8000
+# Open http://localhost:8000
 ```
 
 ---
 
-# 📸 Sample Features
+## 📊 Training Details
 
-- Chest X-ray Upload
-- Pneumonia Prediction
-- Explainable AI Heatmaps
-- Clinical Risk Dashboard
-- Synthetic X-ray Generation
-
----
-
-# 📈 Future Improvements
-
-- Multi-Disease Detection
-- Mobile Application
-- Cloud Deployment
-- Real-Time Hospital Integration
-- Federated Learning Support
-
----
-
-# 👨‍💻 Author
-
-### Charan Raikar
-
-AI & Machine Learning Engineer
-
-📧 raikarcharan64@gmail.com
-
-🔗 LinkedIn: https://www.linkedin.com/in/charanraikar?utm_source=share_via&utm_content=profile&utm_medium=member_android
+| Parameter          | Value                     |
+|--------------------|---------------------------|
+| Architecture       | ConvNeXt-Base             |
+| Pretrained         | ImageNet-22k              |
+| Image Size         | 224 × 224                 |
+| Batch Size         | 32                        |
+| Optimizer          | AdamW                     |
+| Backbone LR        | 5e-5                      |
+| Head LR            | 2e-4                      |
+| Weight Decay       | 5e-4                      |
+| Drop Path Rate     | 0.4                       |
+| Label Smoothing    | 0.1                       |
+| Mixed Precision    | ✅ AMP                    |
+| Early Stopping     | 8 epochs patience         |
+| Max Epochs         | 50                        |
+| Augmentations      | Albumentations pipeline   |
 
 ---
 
-## ⭐ If you found this project useful, please consider giving it a star.
+## 🛠️ Tech Stack
+
+- **Deep Learning:** PyTorch, timm, ConvNeXt
+- **Diffusion:** Custom DDPM UNet
+- **Explainability:** Grad-CAM
+- **Augmentation:** Albumentations
+- **Web Backend:** FastAPI, Uvicorn
+- **Visualisation:** Matplotlib, Seaborn, OpenCV
+- **Dataset:** [Chest X-Ray Images (Pneumonia) — Kaggle](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia)
+
+---
+
+## 📁 Dataset
+
+The Kaggle chest X-ray dataset contains:
+- **Train:** ~5,216 images (NORMAL + PNEUMONIA)
+- **Val:** 16 images (merged into train; proper 85/15 stratified split applied)
+- **Test:** 624 images
+
+---
+
+## 👤 Author
+
+**Charan Arunkumar Raikar**
+M.Tech Computer Science — Manipal Institute of Technology, Bengaluru
+[LinkedIn](https://www.linkedin.com/in/charanraikar) • [GitHub](https://github.com/charanraikar)
+
+pneumonia-detection  chest-xray  convnext  deep-learning  grad-cam
+ddpm  diffusion-model  medical-imaging  fastapi  pytorch
+explainable-ai  transfer-learning  image-classification  python
