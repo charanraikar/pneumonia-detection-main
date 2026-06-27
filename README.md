@@ -231,6 +231,3 @@ The Kaggle chest X-ray dataset contains:
 M.Tech Computer Science — Manipal Institute of Technology, Bengaluru
 [LinkedIn](https://www.linkedin.com/in/charanraikar) • [GitHub](https://github.com/charanraikar)
 
-pneumonia-detection  chest-xray  convnext  deep-learning  grad-cam
-ddpm  diffusion-model  medical-imaging  fastapi  pytorch
-explainable-ai  transfer-learning  image-classification  python
