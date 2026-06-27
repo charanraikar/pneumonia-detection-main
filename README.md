@@ -160,8 +160,8 @@ The system generates:
 ## Clone Repository
 
 ```bash
-git clone https://github.com/Akshaylnshet/pneumonia-detection.git
-cd pneumonia-detection
+git clone https://github.com/charanraikar/pneumonia-detection-main.git
+cd pneumonia-detection-main
 ```
 
 ## Create Virtual Environment
